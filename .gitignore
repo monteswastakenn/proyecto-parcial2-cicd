@@ -14,3 +14,6 @@ reporte/*.out
 reporte/*.toc
 CREDENCIALES.local.md
 *.local
+
+# El reporte incluye credenciales: no se publica en el repositorio
+reporte/
