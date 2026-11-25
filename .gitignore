@@ -12,3 +12,5 @@ reporte/*.aux
 reporte/*.log
 reporte/*.out
 reporte/*.toc
+CREDENCIALES.local.md
+*.local

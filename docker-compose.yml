@@ -111,7 +111,7 @@ services:
       OO_AUTH: ${OO_AUTH:-}
     volumes:
       - ./monitoring/sensores.sh:/sensores.sh:ro
-      - /sys/class:/host/sys/class:ro
+      - /sys:/host/sys:ro
     depends_on:
       - openobserve
 
