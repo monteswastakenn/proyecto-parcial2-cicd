@@ -19,6 +19,8 @@ def panel(pid, tipo, titulo, consulta, *, promql=False, stream='default', stream
     if unidad:
         config['unit'] = unidad
     config['decimals'] = 2
+    if tipo == 'table':
+        config['table_dynamic_columns'] = True  # muestra todas las columnas del SELECT
     eje = lambda alias, etiqueta, tiempo=False: {'label': etiqueta, 'alias': alias, 'column': alias, 'color': None,
                                                   'treatAsNonTimestamp': not tiempo, 'showFieldAsJson': False}
     campos = {'stream': stream, 'stream_type': 'metrics' if promql else stream_type,

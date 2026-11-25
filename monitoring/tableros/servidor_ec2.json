@@ -973,7 +973,7 @@
             "no_value_replacement": "",
             "wrap_table_cells": false,
             "table_transpose": false,
-            "table_dynamic_columns": false,
+            "table_dynamic_columns": true,
             "mappings": [],
             "color": {
               "mode": "palette-classic-by-series",
