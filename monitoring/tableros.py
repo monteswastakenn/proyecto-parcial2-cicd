@@ -127,6 +127,23 @@ ALERTAS = tablero('alertas_operativas', '4. Alertas operativas',
            stream='alertas_disparadas', x=[('x_axis_1', 'Fecha')], y=[]), 3, 12),
 ], periodo='24h')
 
+UNIFICADO = tablero('vista_unificada', '5. Vista unificada: pipeline, trazas e infraestructura',
+    'Criterio 3: en una sola vista los registros del pipeline, las trazas HTTP de la aplicación y las gráficas de CPU, ancho de banda, temperatura y RAM de la instancia EC2.', [
+    (panel('u1', 'table', 'Registros de ejecución del pipeline (GitHub Actions)',
+           'SELECT _timestamp AS x_axis_1, evento, resultado, rama, actor, commit_corto AS commit, detalle FROM "cicd_pipeline" ORDER BY _timestamp DESC LIMIT 50',
+           stream='cicd_pipeline', x=[('x_axis_1', 'Fecha')], y=[]), 3, 9),
+    (panel('u2', 'table', 'Trazas de peticiones HTTP (span raíz de cada traza)',
+           "SELECT _timestamp AS x_axis_1, service_name AS servicio, operation_name AS operacion, duration / 1000 AS duracion_ms, span_status AS estado, trace_id "
+           "FROM \"default\" WHERE span_kind = '2' AND service_name = 'api' ORDER BY _timestamp DESC LIMIT 50",
+           stream_type='traces', x=[('x_axis_1', 'Fecha')], y=[]), 3, 9),
+    (panel('u3', 'line', 'CPU de la instancia (%)', '100 - 100 * avg(system_cpu_utilization{state="idle"})', promql=True, leyenda='CPU', unidad='percent'), 1, 8),
+    (panel('u4', 'line', 'Ancho de banda ens5 (bytes/s)', 'sum by (direction) (rate(system_network_io{device="ens5"}[2m]))', promql=True, leyenda='{direction}', unidad='bytes'), 1, 8),
+    (panel('u5', 'line', 'RAM usada (%)', '100 * sum(system_memory_utilization{state="used"})', promql=True, leyenda='RAM', unidad='percent'), 1, 8),
+    (panel('u6', 'line', 'Temperatura de los sensores (°C)',
+           'SELECT histogram(_timestamp) AS x_axis_1, sensor AS breakdown_1, avg(celsius) AS y_axis_1 FROM "temperatura_servidor" GROUP BY x_axis_1, breakdown_1 ORDER BY x_axis_1',
+           stream='temperatura_servidor', x=[('x_axis_1', 'Tiempo')], y=[('y_axis_1', '°C')], breakdown=[('breakdown_1', 'Sensor')]), 3, 8),
+], periodo='1h')
+
 
 def subir(t):
     url = os.environ['OO_URL'].rstrip('/')
@@ -144,7 +161,7 @@ def subir(t):
 if __name__ == '__main__':
     salida = AQUI / 'tableros'
     salida.mkdir(exist_ok=True)
-    for t in (APP, SERVIDOR, CICD, ALERTAS):
+    for t in (APP, SERVIDOR, CICD, ALERTAS, UNIFICADO):
         (salida / f"{t['dashboardId']}.json").write_text(json.dumps(t, indent=2, ensure_ascii=False))
         if os.environ.get('OO_URL'):
             subir(t)
