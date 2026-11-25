@@ -1,12 +1,13 @@
 // Logs estructurados y metricas HTTP propias (latencia, volumen y errores por endpoint).
-const { metrics, trace } = require('@opentelemetry/api');
-const { logs, SeverityNumber } = require('@opentelemetry/api-logs');
+// Desde @opentelemetry/api 1.10 la API de logs vive en el paquete principal
+const { metrics, trace, logs } = require('@opentelemetry/api');
 
 const servicio = process.env.OTEL_SERVICE_NAME || 'api';
 const otelLogger = logs.getLogger(servicio);
 const meter = metrics.getMeter(servicio);
 
-const severidades = { debug: SeverityNumber.DEBUG, info: SeverityNumber.INFO, warn: SeverityNumber.WARN, error: SeverityNumber.ERROR };
+// Numeros de severidad del modelo de logs de OpenTelemetry
+const severidades = { debug: 5, info: 9, warn: 13, error: 17 };
 
 /** Log estructurado: sale por consola (JSON) y por OTLP hacia OpenObserve. */
 function log(nivel, mensaje, atributos = {}) {
@@ -16,7 +17,7 @@ function log(nivel, mensaje, atributos = {}) {
   if (ctx) Object.assign(registro, { trace_id: ctx.traceId, span_id: ctx.spanId });
   if (process.env.NODE_ENV !== 'test') console.log(JSON.stringify(registro));
   otelLogger.emit({
-    severityNumber: severidades[nivel] || SeverityNumber.INFO,
+    severityNumber: severidades[nivel] || 9,
     severityText: nivel.toUpperCase(),
     body: mensaje,
     attributes: atributos,

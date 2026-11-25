@@ -83,6 +83,8 @@ test.describe('CRUD de productos (frontend)', () => {
     await page.getByRole('button', { name: 'Nuevo' }).click();
     await llenarFormulario(page, { SKU: sku, Nombre: 'Buscable', Precio: '1', Stock: '1' });
     await page.getByRole('button', { name: 'Guardar' }).click();
+    await expect(page.locator('#modal-form')).toBeHidden();
+    await expect(fila(page, sku)).toBeVisible();
     await page.getByPlaceholder('Buscar...').fill(sku);
     await expect(page.locator('#tabla-cuerpo tr')).toHaveCount(1);
     await expect(page.locator('#contador')).toHaveText('1 registro(s)');

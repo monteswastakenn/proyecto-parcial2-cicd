@@ -20,14 +20,14 @@ if (habilitado) {
       'service.version': process.env.APP_VERSION || 'dev',
       'deployment.environment': process.env.NODE_ENV || 'development',
     }),
-    spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter({ url: `${base}/v1/traces` }))],
+    spanProcessors: [new BatchSpanProcessor({ exporter: new OTLPTraceExporter({ url: `${base}/v1/traces` }) })],
     metricReaders: [
       new PeriodicExportingMetricReader({
         exporter: new OTLPMetricExporter({ url: `${base}/v1/metrics` }),
         exportIntervalMillis: 15_000,
       }),
     ],
-    logRecordProcessors: [new BatchLogRecordProcessor(new OTLPLogExporter({ url: `${base}/v1/logs` }))],
+    logRecordProcessors: [new BatchLogRecordProcessor({ exporter: new OTLPLogExporter({ url: `${base}/v1/logs` }) })],
     instrumentations: [
       getNodeAutoInstrumentations({
         '@opentelemetry/instrumentation-fs': { enabled: false },
