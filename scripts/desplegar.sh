@@ -20,6 +20,7 @@ for i in $(seq 1 40); do
   if curl -fsS http://localhost/api/health >/dev/null 2>&1; then
     curl -fsS http://localhost/api/health; echo
     docker image prune -f >/dev/null
+    docker builder prune -af >/dev/null   # libera la cache de construccion (disco de 8 GB)
     docker compose --profile observabilidad ps --format "table {{.Name}}\t{{.Status}}"
     exit 0
   fi

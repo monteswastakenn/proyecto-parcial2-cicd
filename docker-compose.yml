@@ -79,6 +79,7 @@ services:
       ZO_MEMORY_CACHE_MAX_SIZE: "128"
       ZO_MEMORY_CACHE_DATAFUSION_MAX_SIZE: "128"
       ZO_TELEMETRY: "false"
+      ZO_COMPACT_DATA_RETENTION_DAYS: "7"   # el disco de la EC2 es de 8 GB
     ports:
       - "${OO_PORT:-6061}:5080"
     volumes:
