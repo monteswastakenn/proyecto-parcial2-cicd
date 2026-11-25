@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 // BASE_URL apunta al stack levantado con docker compose (en CI y en local: http://localhost)
 export default defineConfig({
   testDir: './tests',
+  globalTeardown: './tests/limpieza.ts',
   timeout: 30_000,
   expect: { timeout: 7_000 },
   fullyParallel: true,
