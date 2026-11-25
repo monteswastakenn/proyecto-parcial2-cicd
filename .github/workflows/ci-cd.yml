@@ -45,6 +45,8 @@ jobs:
         run: docker compose up -d --build --wait db auditoria api web
 
       - name: Pruebas de backend (Jest + Supertest)
+        id: jest
+        continue-on-error: true
         working-directory: api
         env:
           DATABASE_URL: postgres://app:app@localhost:5432/app
@@ -59,10 +61,20 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Pruebas E2E (Playwright - API y frontend)
+        id: playwright
+        continue-on-error: true
         working-directory: e2e
         env:
           BASE_URL: http://localhost
         run: npx playwright test
+
+      - name: Validar resultado de las pruebas
+        run: |
+          echo "Jest: ${{ steps.jest.outcome }} | Playwright: ${{ steps.playwright.outcome }}"
+          if [ "${{ steps.jest.outcome }}" != "success" ] || [ "${{ steps.playwright.outcome }}" != "success" ]; then
+            echo "::error::Las pruebas fallaron; el despliegue a EC2 queda bloqueado"
+            exit 1
+          fi
 
       - name: Logs de los contenedores (solo si algo fallo)
         if: failure()

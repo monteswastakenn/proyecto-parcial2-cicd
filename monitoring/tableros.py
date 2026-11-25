@@ -114,6 +114,17 @@ CICD = tablero('pipeline_cicd', '3. Pipeline CI/CD (GitHub Actions)',
            stream='cicd_pipeline', x=[('x_axis_1', 'Fecha')], y=[]), 3, 14),
 ], periodo='7d')
 
+ALERTAS = tablero('alertas_operativas', '4. Alertas operativas',
+    'Alertas de OpenObserve disparadas (errores, latencia, pipeline, CPU, RAM y disco). Cada disparo se guarda en el stream alertas_disparadas.', [
+    (panel('a1', 'metric', 'Alertas disparadas', 'SELECT count(*) AS y_axis_1 FROM "alertas_disparadas"', stream='alertas_disparadas', y=[('y_axis_1', 'Alertas')]), 1, 7),
+    (panel('a2', 'bar', 'Alertas disparadas por tipo',
+           'SELECT histogram(_timestamp) AS x_axis_1, alerta AS breakdown_1, count(*) AS y_axis_1 FROM "alertas_disparadas" GROUP BY x_axis_1, breakdown_1 ORDER BY x_axis_1',
+           stream='alertas_disparadas', x=[('x_axis_1', 'Tiempo')], y=[('y_axis_1', 'Disparos')], breakdown=[('breakdown_1', 'Alerta')]), 2, 7),
+    (panel('a3', 'table', 'Historial de alertas',
+           'SELECT _timestamp AS x_axis_1, alerta, stream, tipo_stream, filas, inicio, fin FROM "alertas_disparadas" ORDER BY _timestamp DESC LIMIT 100',
+           stream='alertas_disparadas', x=[('x_axis_1', 'Fecha')], y=[]), 3, 12),
+], periodo='24h')
+
 
 def subir(t):
     url = os.environ['OO_URL'].rstrip('/')
@@ -131,7 +142,7 @@ def subir(t):
 if __name__ == '__main__':
     salida = AQUI / 'tableros'
     salida.mkdir(exist_ok=True)
-    for t in (APP, SERVIDOR, CICD):
+    for t in (APP, SERVIDOR, CICD, ALERTAS):
         (salida / f"{t['dashboardId']}.json").write_text(json.dumps(t, indent=2, ensure_ascii=False))
         if os.environ.get('OO_URL'):
             subir(t)
