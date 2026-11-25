@@ -1,0 +1,62 @@
+# OpenTelemetry Collector: recibe OTLP de los servicios y mide los recursos del servidor EC2.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+  hostmetrics:
+    root_path: /hostfs
+    collection_interval: 15s
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+      memory:
+        metrics:
+          system.memory.utilization:
+            enabled: true
+      load: {}
+      disk: {}
+      filesystem:
+        metrics:
+          system.filesystem.utilization:
+            enabled: true
+      network: {}
+      paging: {}
+      processes: {}
+
+processors:
+  batch:
+    timeout: 5s
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 150
+  resourcedetection:
+    detectors: [env, system, ec2]
+    timeout: 5s
+    override: false
+
+exporters:
+  otlphttp/openobserve:
+    endpoint: ${env:OO_ENDPOINT}
+    headers:
+      Authorization: Basic ${env:OO_AUTH}
+      stream-name: default
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/openobserve]
+    metrics:
+      receivers: [otlp, hostmetrics]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlphttp/openobserve]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/openobserve]

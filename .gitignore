@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.ejemplo
+coverage/
+jest-resultados.json
+e2e/reporte-playwright/
+e2e/test-results/
+*.log
+.DS_Store
+reporte/*.aux
+reporte/*.log
+reporte/*.out
+reporte/*.toc
