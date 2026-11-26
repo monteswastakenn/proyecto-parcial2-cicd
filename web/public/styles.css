@@ -36,3 +36,4 @@ dialog::backdrop { background: rgba(0,0,0,.35); }
 #toast { position: fixed; bottom: 20px; right: 20px; background: #1a7f37; color: #fff; padding: 10px 16px; border-radius: 8px; }
 #toast.error { background: var(--peligro); }
 @media (max-width: 640px) { .encabezado input { width: 100%; } table { font-size: .8rem; } }
+#pie-version { position: fixed; bottom: 6px; left: 12px; font-size: .75rem; color: #6e7781; }

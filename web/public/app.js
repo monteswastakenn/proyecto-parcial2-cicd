@@ -260,3 +260,8 @@ function render() {
 
 window.addEventListener('hashchange', render);
 render();
+
+// Muestra en el pie la version (commit) que reporta la API; cambia en cada despliegue
+fetch('/api/health').then((r) => r.json())
+  .then((d) => { document.getElementById('version').textContent = d.version || 'local'; })
+  .catch(() => { document.getElementById('version').textContent = 'sin conexión'; });
