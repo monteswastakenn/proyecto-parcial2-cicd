@@ -38,21 +38,52 @@ case "$modo" in
 esac
 
 commit=$(git rev-parse --short HEAD)
+sha=$(git rev-parse HEAD)
 echo "Commit $commit creado. Haciendo push..."
 git push -q
+
+echo "Esperando a que GitHub Actions arranque el pipeline..."
+id=""
+for _ in $(seq 1 30); do
+  id=$(gh run list --commit "$sha" --json databaseId -q '.[0].databaseId' 2>/dev/null || true)
+  [ -n "$id" ] && break
+  sleep 2
+done
+if [ -z "$id" ]; then
+  echo "No encontre la ejecucion todavia. Abrela en: $REPO/actions"; open "$REPO/actions" 2>/dev/null || true; exit 0
+fi
+
+echo "Ejecucion: $REPO/actions/runs/$id"
+open "$REPO/actions/runs/$id" 2>/dev/null || true
 echo
-echo "Listo. Abriendo GitHub Actions (la ejecucion nueva aparece hasta arriba en unos segundos)."
-open "$REPO/actions" 2>/dev/null || true
+echo "================  PIPELINE EN VIVO (se actualiza solo)  ================"
+gh run watch "$id" --interval 3 || true
+
 echo
-echo "Que mostrar:"
-echo "  1. GitHub Actions: $REPO/actions  -> clic en la ejecucion de arriba"
+echo "================  RESULTADO  ================"
+gh run view "$id" --json jobs -q '.jobs[]|"  \(.name): \(.conclusion)"'
+
 if [ "$modo" = error ]; then
-  echo "     'Pruebas' termina en rojo y 'Despliegue en AWS EC2' queda omitido (gris)."
-  echo "  2. El sistema sigue con la version anterior: $APP (pie de pagina)"
-  echo "  3. OpenObserve: $OO -> Dashboards -> '3. Pipeline CI/CD' (pruebas: fallo y despliegue_bloqueado)"
-  echo "     y Alertas -> pipeline_fallido. Despues ejecuta: bash scripts/demo.sh corregir"
+  echo
+  echo "================  LOG DEL FALLO (Playwright)  ================"
+  gh run view "$id" --log 2>/dev/null \
+    | grep -E "Pruebas E2E|Pruebas de backend|Validar resultado" \
+    | sed -E 's/^.*Z //' \
+    | grep -E "✘|Expected:|Received:|^ *[0-9]+ (passed|failed)|^Tests:|^Jest: " \
+    | grep -v "test-results/" | head -30 || true
+  echo
+  echo "El despliegue quedo OMITIDO: nunca se abrio la conexion SSH a EC2."
+  echo "El servidor sigue con la version anterior:"
+  curl -s -m 10 "$APP/api/health"; echo
+  echo
+  echo "Mostrar en OpenObserve: $OO -> Dashboards -> '3. Pipeline CI/CD' (pruebas: fallo y despliegue_bloqueado)"
+  echo "                         y Alertas -> pipeline_fallido (se dispara en ~1 minuto)."
+  echo "Para dejarlo bien: bash scripts/demo.sh corregir"
 else
-  echo "     Primero 'Pruebas' (~1 min) y luego 'Despliegue en AWS EC2' (~1 min), ambos en verde."
-  echo "  2. Al terminar, recarga $APP : el pie dice 'Version desplegada: $commit'"
-  echo "  3. OpenObserve: $OO -> Dashboards -> '3. Pipeline CI/CD' o '5. Vista unificada'"
+  echo
+  echo "Version que reporta ahora el servidor:"
+  curl -s -m 10 "$APP/api/health"; echo
+  echo
+  echo "Recarga $APP : el pie dice 'Version desplegada: $commit'"
+  echo "OpenObserve: $OO -> Dashboards -> '3. Pipeline CI/CD' o '5. Vista unificada'"
 fi
