@@ -148,7 +148,7 @@ function pintarTabla() {
     for (const [campo] of sec.columnas) {
       const td = document.createElement('td');
       td.dataset.col = campo;
-      td.textContent = campo === 'precio' ? `$${Number(reg[campo]).toFixed(0)}` : reg[campo];
+      td.textContent = campo === 'precio' ? `$${Number(reg[campo]).toFixed(2)}` : reg[campo];
       tr.appendChild(td);
     }
     const acciones = document.createElement('td');
